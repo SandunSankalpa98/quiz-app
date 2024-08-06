@@ -1,55 +1,71 @@
-
-import { useEffect, useReducer } from 'react'
-import Header from './Components/Header'
-import Main from './Components/Main'
+import { useEffect, useReducer } from 'react';
+import Header from './Components/Header';
+import Main from './Components/Main';
 import Loader from './Components/Loader';
 import Error from './Components/Error';
 import StartScreen from './Components/StartScreen';
+import Question from './Components/Question';
 
 const initialState = {
   questions: [],
+  status: "loading", // 'loading', 'error', 'active', 'finished'
+  index: 0,
+  answer: null,
+  points: 0,
+};
 
-  // 'loading', 'error', 'active', 'finished'
-  status: "loading"
-}
-function reducer(state, action){
-  switch(action.type){
+function reducer(state, action) {
+  switch (action.type) {
     case 'dataReceived':
-      return{
+      return {
         ...state,
-        questions:action.payload,
+        questions: action.payload,
         status: "ready",
       };
     case "dataFailed":
-      return{
+      return {
         ...state,
         status: "error",
       };
+    case "start":
+      return {
+        ...state,
+        status: "active",
+      };
+    case "newAnswer":
+      const question = state.questions[state.index];
+      const isCorrect = action.payload === question.correctOption;
+      return {
+        ...state,
+        answer: action.payload,
+        points: isCorrect ? state.points + question.points : state.points,
+      };
     default:
-      throw new Error("Action unkonwn")
+      throw new Error("Action unknown");
   }
 }
 
 export default function App() {
+  const [{ questions, status, index, answer }, dispatch] = useReducer(reducer, initialState);
 
-  const [{questions, status}, dispatch] = useReducer(reducer, initialState);
-
-  const numQuestions = questions.length;
   useEffect(() => {
     fetch('http://localhost:9000/questions')
       .then((res) => res.json())
       .then((data) => dispatch({ type: 'dataReceived', payload: data }))
       .catch((err) => dispatch({ type: 'dataFailed' }));
   }, []);
-  
+
+  const numQuestions = questions.length;
+
   return (
     <div className='app'>
-      <Header/>
+      <Header />
       <Main>
-        {status === "loading" && <Loader/>}
-        {status === "error" && <Error/>}
-        {status === "ready" && <StartScreen numQuestions={numQuestions} />}
+        {status === "loading" && <Loader />}
+        {status === "error" && <Error />}
+        {status === "ready" && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
+        {status === "active" && <Question question={questions[index]} dispatch={dispatch} answer={answer} />}
       </Main>
     </div>
-  )
+  );
 }
