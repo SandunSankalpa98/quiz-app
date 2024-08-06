@@ -5,6 +5,7 @@ import Loader from './Components/Loader';
 import Error from './Components/Error';
 import StartScreen from './Components/StartScreen';
 import Question from './Components/Question';
+import NextButton from './Components/NextButton';
 
 const initialState = {
   questions: [],
@@ -33,12 +34,19 @@ function reducer(state, action) {
         status: "active",
       };
     case "newAnswer":
+      // eslint-disable-next-line no-case-declarations
       const question = state.questions[state.index];
+      // eslint-disable-next-line no-case-declarations
       const isCorrect = action.payload === question.correctOption;
       return {
         ...state,
         answer: action.payload,
         points: isCorrect ? state.points + question.points : state.points,
+      };
+    case 'nextQuestions':
+      return{
+        ...state,
+        index: state.index + 1
       };
     default:
       throw new Error("Action unknown");
@@ -64,7 +72,11 @@ export default function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "ready" && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
-        {status === "active" && <Question question={questions[index]} dispatch={dispatch} answer={answer} />}
+        <>
+          {status === "active" && <Question question={questions[index]} dispatch={dispatch} answer={answer} />}
+          <NextButton dispatch={dispatch}/>
+        </>
+        
       </Main>
     </div>
   );
