@@ -15,6 +15,7 @@ const initialState = {
   index: 0,
   answer: null,
   points: 0,
+  highscore: 0,
 };
 
 function reducer(state, action) {
@@ -36,7 +37,9 @@ function reducer(state, action) {
         status: "active",
       };
     case "newAnswer":
+      // eslint-disable-next-line no-case-declarations
       const question = state.questions[state.index];
+      // eslint-disable-next-line no-case-declarations
       const isCorrect = action.payload === question.correctOption;
       return {
         ...state,
@@ -53,6 +56,8 @@ function reducer(state, action) {
       return {
         ...state,
         status: "finished",
+        highscore: 
+          state.points > state.highscore ? state.points : state.highscore,
       };
     default:
       throw new Error("Action unknown");
@@ -60,7 +65,7 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [{ questions, status, index, answer, points }, dispatch] = useReducer(reducer, initialState);
+  const [{ questions, status, index, answer, points,highscore }, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     fetch('http://localhost:9000/questions')
@@ -87,7 +92,7 @@ export default function App() {
           </>
         )}
 
-        {status === 'finished' && <FinishScreen points={points} maxPossiblePoints={maxPossiblePoints}/>}
+        {status === 'finished' && <FinishScreen points={points} maxPossiblePoints={maxPossiblePoints} highscore={highscore}/>}
       </Main>
     </div>
   );
